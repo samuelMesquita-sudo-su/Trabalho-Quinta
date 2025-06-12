@@ -14,7 +14,8 @@ const int ledPin = 6;
 const int potPin = A0;
 
 // Estado do sistema
-bool maoDetectada = false;  // novo controle de presença
+bool ventiladorLigado = false;  // novo controle de presença
+long tempoLigado;
 
 void setup() {
   pinMode(trigPin, OUTPUT);
@@ -43,18 +44,21 @@ void loop() {
   Serial.println(distancia);
 
   // Verifica presença e faz toggle só quando detecta entrada da mão
-  if (distancia < 10 && !maoDetectada) {
-    maoDetectada = true;  // marca que já detectou
-    Serial.println(maoDetectada ? "Sistema LIGADO" : "Sistema DESLIGADO");
+  if (distancia < 10 && ventiladorLigado == false) {
+    ventiladorLigado = true;  // marca que já detectou
+    tempoLigado = millis();
+    Serial.println(ventiladorLigado ? "Sistema LIGADO" : "Sistema DESLIGADO");
     delay(300);  // pequena pausa pra evitar repetições
   }
 
   // Quando a mão sai da frente, permite nova detecção
-  if (distancia >= 10 && maoDetectada) {
-    maoDetectada = false;
+  if (ventiladorLigado && tempoLigado >= 10000) {
+    ventiladorLigado = false;
+    Serial.println("Ventilador desligado ");
+    
   }
 
-  if (maoDetectada) {
+  if (ventiladorLigado) {
     digitalWrite(ledPin, HIGH);
     digitalWrite(in1, HIGH);
     digitalWrite(in2, LOW);
