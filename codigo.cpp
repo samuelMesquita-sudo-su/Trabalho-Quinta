@@ -44,7 +44,7 @@ void loop() {
   Serial.println(distancia);
 
   // Verifica presença e faz toggle só quando detecta entrada da mão
-  if (distancia < 10 && ventiladorLigado == false) {
+  if (distancia < 5 && ventiladorLigado == false) {
     ventiladorLigado = true;  // marca que já detectou
     tempoLigado = millis();
     Serial.println(ventiladorLigado ? "Sistema LIGADO" : "Sistema DESLIGADO");
