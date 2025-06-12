@@ -1,5 +1,5 @@
 #include <Ultrasonic.h>
-//precisa ter a biblioteca
+
 //pinos do HC
 #define pinoTrigger 3;
 #define pinoEcho 4;
@@ -14,7 +14,7 @@ int pinoLed = 6;
 
 //sobre o ventilador
 bool ventiladorLigado = false;
-long tempoLigado;
+long tempoLigado = 0;
 
 
 void setup() {
@@ -31,10 +31,26 @@ void loop() {
   long microsec = ultrasonic.timing();
   cmMsec = ultrasonic.convert (microsec, Ultraonic::CM);
   Serial.println(cmMsec);
-  
 
-  analogWrite(10, velocidade);
-  analogWrite(11, 0);
+  if ((cmMsec <= 10) && (ventiladorLigado == false) )
+  {
+    Serial.println("ventiladorLigando");
+    ventiladorLigado = true;
+    //peguei essa parte do codigo aq;
+    analogWrite(10, velocidade);
+    analogWrite(11, 0);
+    tempoLigado++;
+  }
+
+  if (ventiladorLigado == true && tempoLigado >= 10)
+  {
+    Serial.println("Desligando Ventilador");
+    ventiladorLigado == false;
+    analogWrite(10, 0);
+    analogWrite(11, 0);
+  }
+
+
 
 
 }
