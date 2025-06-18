@@ -45,6 +45,8 @@ void loop() {
     analogWrite(11, 0);
     tempo = millis();
     batman = 1;
+
+    digitalWrite(pinoLed, HIGH);
   }
 
   if ((cmMsec > 0 && cmMsec <= 10) && batman == 1 && (millis() - tempo > 2000) )
@@ -55,9 +57,7 @@ void loop() {
     analogWrite(11, 0);
     tempo = millis();
     batman = 0;
+
+    digitalWrite(pinoLed, LOW);
   }
-
-
-
-
 }
