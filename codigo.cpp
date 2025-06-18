@@ -60,4 +60,8 @@ void loop() {
 
     digitalWrite(pinoLed, LOW);
   }
+
+  if (ventiladorLigado){
+    analogWrite(10, velocidade);
+  }
 }
