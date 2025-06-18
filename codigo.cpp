@@ -1,73 +1,63 @@
-// === Pinos do HC-SR04 ===
-const int trigPin = 4;
-const int echoPin = 3;
+#include <Ultrasonic.h>
 
-// === Pinos do motor (ponte H) ===
-const int in1 = 10;
-const int in2 = 11;
-const int ena = 3; // PWM
+//pinos do HC
+#define pinoTrigger 3
+#define pinoEcho 4
 
-// === LED indicador ===
-const int ledPin = 6;
+Ultrasonic ultrasonic(pinoTrigger, pinoEcho);
 
-// === Potenciômetro ===
-const int potPin = A0;
+//PINO dO LED
+int pinoLed = 6;
 
-// Estado do sistema
-bool maoDetectada = false;  // novo controle de presença
+//sobre o ventilador
+bool ventiladorLigado = false;
+long tempoLigado = 0;
+unsigned long tempo;
+int batman = 0;;
 
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  pinMode(ena, OUTPUT);
-  pinMode(ledPin, OUTPUT);
+  pinMode(pinoTrigger, OUTPUT);
+  pinMode(pinoEcho, INPUT);
+  pinMode(10, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(pinoLed, OUTPUT);
   Serial.begin(9600);
 }
 
 void loop() {
-  long duracao, distancia;
+  //velocidade
+  int velocidade = analogRead(A0)/4;
 
-  // Envia pulso para medir distância
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
 
-  duracao = pulseIn(echoPin, HIGH);
-  distancia = duracao * 0.034 / 2; // cm
+  float cmMsec;
+  long microsec = ultrasonic.timing();
+  cmMsec = ultrasonic.convert (microsec, Ultrasonic::CM);
+  Serial.println(cmMsec);
+  Serial.println(tempoLigado);
+  delay(50);
 
-  Serial.print("Distância: ");
-  Serial.println(distancia);
-
-  // Verifica presença e faz toggle só quando detecta entrada da mão
-  if (distancia < 10 && !maoDetectada) {
-    maoDetectada = true;  // marca que já detectou
-    Serial.println(maoDetectada ? "Sistema LIGADO" : "Sistema DESLIGADO");
-    delay(300);  // pequena pausa pra evitar repetições
+  if ((cmMsec > 0 && cmMsec <= 10) && batman == 0 && (millis() - tempo > 2000))
+  {
+    Serial.println("ventiladorLigando");
+    ventiladorLigado = true;
+    //peguei essa parte do codigo aq;
+    analogWrite(10, velocidade);
+    analogWrite(11, 0);
+    tempo = millis();
+    batman = 1;
   }
 
-  // Quando a mão sai da frente, permite nova detecção
-  if (distancia >= 10 && maoDetectada) {
-    maoDetectada = false;
+  if ((cmMsec > 0 && cmMsec <= 10) && batman == 1 && (millis() - tempo > 2000) )
+  {
+    Serial.println("Desligando Ventilador");
+    ventiladorLigado = false;
+    analogWrite(10, 0);
+    analogWrite(11, 0);
+    tempo = millis();
+    batman = 0;
   }
 
-  if (maoDetectada) {
-    digitalWrite(ledPin, HIGH);
-    digitalWrite(in1, HIGH);
-    digitalWrite(in2, LOW);
 
-    int potValor = analogRead(potPin);
-    int velocidade = map(potValor, 0, 1023, 0, 255);
-    analogWrite(ena, velocidade);
-  } else {
-    digitalWrite(ledPin, LOW);
-    digitalWrite(in1, LOW);
-    digitalWrite(in2, LOW);
-    analogWrite(ena, 0);
-  }
 
-  delay(100);
+
 }
