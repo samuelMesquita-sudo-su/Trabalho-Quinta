@@ -1,19 +1,14 @@
 #include <Ultrasonic.h>
 
-//pinos do HC
 #define pinoTrigger 3
 #define pinoEcho 4
 
 Ultrasonic ultrasonic(pinoTrigger, pinoEcho);
 
-//PINO dO LED
 int pinoLed = 6;
-
-//sobre o ventilador
 bool ventiladorLigado = false;
-long tempoLigado = 0;
-unsigned long tempo;
-int batman = 0;;
+unsigned long tempo = 0;
+bool podeAlternar = true; // nova variável
 
 void setup() {
   pinMode(pinoTrigger, OUTPUT);
@@ -25,39 +20,43 @@ void setup() {
 }
 
 void loop() {
-  //velocidade
-  int velocidade = analogRead(A0)/4;
-
-
+  int velocidade = analogRead(A0) / 4;
   float cmMsec;
   long microsec = ultrasonic.timing();
-  cmMsec = ultrasonic.convert (microsec, Ultrasonic::CM);
+  cmMsec = ultrasonic.convert(microsec, Ultrasonic::CM);
+
   Serial.println(cmMsec);
-  Serial.println(tempoLigado);
   delay(50);
 
-  if ((cmMsec > 0 && cmMsec <= 10) && batman == 0 && (millis() - tempo > 2000))
-  {
-    Serial.println("ventiladorLigando");
-    ventiladorLigado = true;
-    //peguei essa parte do codigo aq;
+  // Quando a mão estiver próxima
+  if (cmMsec > 0 && cmMsec <= 10) {
+    if (podeAlternar && millis() - tempo > 2000) {
+      ventiladorLigado = !ventiladorLigado;
+
+      if (ventiladorLigado) {
+        Serial.println("Ligando ventilador");
+        digitalWrite(pinoLed, HIGH);
+        analogWrite(10, velocidade);
+        analogWrite(11, 0);
+      } else {
+        Serial.println("Desligando ventilador");
+        digitalWrite(pinoLed, LOW);
+        analogWrite(10, 0);
+        analogWrite(11, 0);
+      }
+
+      tempo = millis();
+      podeAlternar = false; // evita nova troca enquanto ainda está perto
+    }
+  }
+
+  // Quando a mão se afasta
+  if (cmMsec > 15) {
+    podeAlternar = true;
+  }
+
+  // Se estiver ligado, atualiza a velocidade
+  if (ventiladorLigado) {
     analogWrite(10, velocidade);
-    analogWrite(11, 0);
-    tempo = millis();
-    batman = 1;
   }
-
-  if ((cmMsec > 0 && cmMsec <= 10) && batman == 1 && (millis() - tempo > 2000) )
-  {
-    Serial.println("Desligando Ventilador");
-    ventiladorLigado = false;
-    analogWrite(10, 0);
-    analogWrite(11, 0);
-    tempo = millis();
-    batman = 0;
-  }
-
-
-
-
 }
